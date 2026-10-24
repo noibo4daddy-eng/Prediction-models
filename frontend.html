@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CAR//ML</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>CAR<span>//</span>ML</h1>
+    <p class="tagline">used car price &amp; fuel type prediction system</p>
+    <div class="status">
+      <span class="dot" id="dot"></span>
+      <span id="status_text">CONNECTING...</span>
+    </div>
+  </header>
+
+  <!-- MODEL STATS -->
+  <section class="stats">
+
+    <div class="panel">
+      <h2>&gt; REGRESSION MODEL</h2>
+      <p class="model-name" id="r_model">--</p>
+
+      <div class="meter-label"><span>R&sup2; SCORE</span><span id="s_r2">--</span></div>
+      <div class="meter"><div class="meter-fill" id="s_r2_bar"></div></div>
+
+      <div class="cards">
+        <div class="card"><span class="card-label">AVG ERROR (MAE)</span><span class="card-value" id="s_mae">--</span></div>
+        <div class="card"><span class="card-label">ERROR %</span><span class="card-value" id="s_mape">--</span></div>
+        <div class="card"><span class="card-label">FEATURES</span><span class="card-value" id="s_rfeat">--</span></div>
+        <div class="card"><span class="card-label">TRAIN ROWS</span><span class="card-value" id="s_rtrain">--</span></div>
+        <div class="card"><span class="card-label">TEST ROWS</span><span class="card-value" id="s_rtest">--</span></div>
+        <div class="card"><span class="card-label">LOG R&sup2;</span><span class="card-value" id="s_rlog">--</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>&gt; CLASSIFICATION MODEL</h2>
+      <p class="model-name" id="c_model">--</p>
+
+      <div class="meter-label"><span>ACCURACY</span><span id="s_acc">--</span></div>
+      <div class="meter"><div class="meter-fill" id="s_acc_bar"></div></div>
+
+      <div class="cards">
+        <div class="card"><span class="card-label">CORRECT</span><span class="card-value" id="s_correct">--</span></div>
+        <div class="card"><span class="card-label">TEST ROWS</span><span class="card-value" id="s_ctest">--</span></div>
+        <div class="card"><span class="card-label">FEATURES</span><span class="card-value" id="s_cfeat">--</span></div>
+      </div>
+
+      <h3 class="sub">CONFUSION MATRIX (rows = actual, columns = predicted)</h3>
+      <div class="matrix">
+        <div class="cell head"></div>
+        <div class="cell head">Diesel</div>
+        <div class="cell head">Petrol</div>
+
+        <div class="cell head">Diesel</div>
+        <div class="cell good" id="cm00">--</div>
+        <div class="cell bad" id="cm01">--</div>
+
+        <div class="cell head">Petrol</div>
+        <div class="cell bad" id="cm10">--</div>
+        <div class="cell good" id="cm11">--</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- PREDICTION FORMS -->
+  <section class="forms">
+
+    <!-- FORM 1: REGRESSION -->
+    <div class="panel">
+      <h2>&gt; PREDICT CAR PRICE</h2>
+      <div class="fields">
+        <div><label>Year</label><input type="number" id="r_year" value="2015"></div>
+        <div><label>Km driven</label><input type="number" id="r_km" value="60000"></div>
+        <div><label>Fuel</label>
+          <select id="r_fuel"><option>Diesel</option><option>Petrol</option></select></div>
+        <div><label>Seller type</label>
+          <select id="r_seller"><option>Individual</option><option>Dealer</option><option>Trustmark Dealer</option></select></div>
+        <div><label>Transmission</label>
+          <select id="r_trans"><option>Manual</option><option>Automatic</option></select></div>
+        <div><label>Owner</label>
+          <select id="r_owner"><option>First Owner</option><option>Second Owner</option><option>Third Owner</option><option>Fourth &amp; Above Owner</option></select></div>
+        <div><label>Mileage (kmpl)</label><input type="number" id="r_mileage" value="20"></div>
+        <div><label>Engine (CC)</label><input type="number" id="r_engine" value="1248"></div>
+        <div><label>Max power (bhp)</label><input type="number" id="r_power" value="74"></div>
+        <div><label>Seats</label><input type="number" id="r_seats" value="5"></div>
+        <div><label>Brand</label><select id="r_brand"></select></div>
+      </div>
+      <button onclick="predictPrice()">Run Prediction</button>
+      <div class="result" id="r_result"></div>
+    </div>
+
+    <!-- FORM 2: CLASSIFICATION -->
+    <div class="panel">
+      <h2>&gt; PREDICT FUEL TYPE</h2>
+      <div class="fields">
+        <div><label>Year</label><input type="number" id="c_year" value="2015"></div>
+        <div><label>Selling price (Rs)</label><input type="number" id="c_price" value="450000"></div>
+        <div><label>Km driven</label><input type="number" id="c_km" value="60000"></div>
+        <div><label>Seller type</label>
+          <select id="c_seller"><option>Individual</option><option>Dealer</option><option>Trustmark Dealer</option></select></div>
+        <div><label>Transmission</label>
+          <select id="c_trans"><option>Manual</option><option>Automatic</option></select></div>
+        <div><label>Owner</label>
+          <select id="c_owner"><option>First Owner</option><option>Second Owner</option><option>Third Owner</option><option>Fourth &amp; Above Owner</option></select></div>
+        <div><label>Mileage (kmpl)</label><input type="number" id="c_mileage" value="20"></div>
+        <div><label>Engine (CC)</label><input type="number" id="c_engine" value="1248"></div>
+        <div><label>Max power (bhp)</label><input type="number" id="c_power" value="74"></div>
+        <div><label>Seats</label><input type="number" id="c_seats" value="5"></div>
+        <div><label>Brand</label><select id="c_brand"></select></div>
+      </div>
+      <button onclick="predictFuel()">Run Prediction</button>
+      <div class="result" id="c_result"></div>
+    </div>
+
+  </section>
+
+  <script>
+    const API = "http://127.0.0.1:8000";
+
+    // brand list, used to fill both dropdowns
+    const brands = [
+      "Maruti", "Hyundai", "Honda", "Toyota", "Ford", "Tata", "Mahindra",
+      "Renault", "Volkswagen", "Skoda", "Nissan", "Chevrolet", "Kia", "Jeep",
+      "MG", "Datsun", "Fiat", "Audi", "BMW", "Mercedes-Benz", "Volvo",
+      "Jaguar", "Land", "Lexus", "Mitsubishi", "Isuzu", "Force", "Opel",
+      "Peugeot", "Daewoo", "Ashok", "Ambassador"
+    ];
+
+    ["r_brand", "c_brand"].forEach(function (id) {
+      const select = document.getElementById(id);
+      brands.forEach(function (brand) {
+        select.innerHTML += "<option>" + brand + "</option>";
+      });
+    });
+
+    // ask the backend for the model stats and show them
+    async function loadStats() {
+      try {
+        const response = await fetch(API + "/stats");
+        const stats = await response.json();
+        const r = stats.regression;
+        const c = stats.classification;
+
+        // regression stats
+        document.getElementById("r_model").innerText = r.model;
+        document.getElementById("s_r2").innerText = r.r2.toFixed(3);
+        document.getElementById("s_r2_bar").style.width = (r.r2 * 100) + "%";
+        document.getElementById("s_mae").innerText = "Rs " + Math.round(r.mae).toLocaleString();
+        document.getElementById("s_mape").innerText = r.mape.toFixed(1) + "%";
+        document.getElementById("s_rfeat").innerText = r.features;
+        document.getElementById("s_rtrain").innerText = r.train_rows.toLocaleString();
+        document.getElementById("s_rtest").innerText = r.test_rows.toLocaleString();
+        document.getElementById("s_rlog").innerText = r.r2_log.toFixed(3);
+
+        // classification stats
+        document.getElementById("c_model").innerText = c.model;
+        document.getElementById("s_acc").innerText = c.accuracy.toFixed(1) + "%";
+        document.getElementById("s_acc_bar").style.width = c.accuracy + "%";
+        document.getElementById("s_correct").innerText = c.correct.toLocaleString();
+        document.getElementById("s_ctest").innerText = c.test_rows.toLocaleString();
+        document.getElementById("s_cfeat").innerText = c.features;
+
+        // confusion matrix
+        document.getElementById("cm00").innerText = c.confusion_matrix[0][0];
+        document.getElementById("cm01").innerText = c.confusion_matrix[0][1];
+        document.getElementById("cm10").innerText = c.confusion_matrix[1][0];
+        document.getElementById("cm11").innerText = c.confusion_matrix[1][1];
+
+        // show that the backend is online
+        document.getElementById("dot").className = "dot online";
+        document.getElementById("status_text").innerText = "API ONLINE";
+      } catch (error) {
+        document.getElementById("dot").className = "dot offline";
+        document.getElementById("status_text").innerText = "API OFFLINE - START UVICORN";
+      }
+    }
+
+    loadStats();
+
+    async function predictPrice() {
+      const data = {
+        year: Number(document.getElementById("r_year").value),
+        km_driven: Number(document.getElementById("r_km").value),
+        fuel: document.getElementById("r_fuel").value,
+        seller_type: document.getElementById("r_seller").value,
+        transmission: document.getElementById("r_trans").value,
+        owner: document.getElementById("r_owner").value,
+        mileage: Number(document.getElementById("r_mileage").value),
+        engine: Number(document.getElementById("r_engine").value),
+        max_power: Number(document.getElementById("r_power").value),
+        seats: Number(document.getElementById("r_seats").value),
+        brand: document.getElementById("r_brand").value
+      };
+
+      document.getElementById("r_result").innerText = "computing...";
+
+      try {
+        const response = await fetch(API + "/predict/regression", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        document.getElementById("r_result").innerText =
+          "Estimated price: Rs " + result.predicted_price.toLocaleString();
+      } catch (error) {
+        document.getElementById("r_result").innerText =
+          "Error: could not reach the backend.";
+      }
+    }
+
+    async function predictFuel() {
+      const data = {
+        year: Number(document.getElementById("c_year").value),
+        selling_price: Number(document.getElementById("c_price").value),
+        km_driven: Number(document.getElementById("c_km").value),
+        seller_type: document.getElementById("c_seller").value,
+        transmission: document.getElementById("c_trans").value,
+        owner: document.getElementById("c_owner").value,
+        mileage: Number(document.getElementById("c_mileage").value),
+        engine: Number(document.getElementById("c_engine").value),
+        max_power: Number(document.getElementById("c_power").value),
+        seats: Number(document.getElementById("c_seats").value),
+        brand: document.getElementById("c_brand").value
+      };
+
+      document.getElementById("c_result").innerText = "computing...";
+
+      try {
+        const response = await fetch(API + "/predict/classification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        document.getElementById("c_result").innerText =
+          "Predicted fuel type: " + result.predicted_fuel;
+      } catch (error) {
+        document.getElementById("c_result").innerText =
+          "Error: could not reach the backend.";
+      }
+    }
+  </script>
+
+</body>
+</html>
